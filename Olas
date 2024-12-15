@@ -1,0 +1,245 @@
+if game.PlaceId == 11177482306 then
+    -- Load OrionLib for the GUI
+    local OrionLib = loadstring(game:HttpGet('https://raw.githubusercontent.com/shlexware/Orion/main/source'))()
+
+    -- Create Window
+    local Window = OrionLib:MakeWindow({
+        Name = "Goat Hub for Street Wars 2",
+        HidePremium = false,
+        SaveConfig = true,
+        ConfigFolder = "GoatHub"
+    })
+
+    -- Global variables for toggles
+    _G.killAura = false
+    _G.onePunch = false
+    _G.autoPickup = false
+    _G.godmode = false
+    _G.wallHack = false
+    _G.duplicateGun = false
+    _G.moneyDuping = false
+
+    -- Function to enable Godmode (sets health to 4 million)
+    function enableGodmode()
+        local player = game.Players.LocalPlayer
+        if player and player.Character then
+            local humanoid = player.Character:FindFirstChild("Humanoid")
+            if humanoid then
+                humanoid.MaxHealth = 4000000
+                humanoid.Health = 4000000
+            end
+        end
+    end
+
+    -- Function to enable Kill Aura (sets health of nearby players to 0)
+    function enableKillAura()
+        local player = game.Players.LocalPlayer
+        local character = player.Character
+        local humanoid = character:FindFirstChild("Humanoid")
+        
+        -- Continuously check for other players near the user
+        game:GetService("RunService").Heartbeat:Connect(function()
+            if _G.killAura and character and humanoid then
+                for _, otherPlayer in pairs(game.Players:GetChildren()) do
+                    if otherPlayer ~= player and otherPlayer.Character then
+                        local otherCharacter = otherPlayer.Character
+                        local otherHumanoid = otherCharacter:FindFirstChild("Humanoid")
+                        
+                        -- If another player is within range and has a humanoid
+                        if otherHumanoid and (otherCharacter.PrimaryPart.Position - character.PrimaryPart.Position).Magnitude < 10 then
+                            otherHumanoid.Health = 0  -- Set health to 0 (Kill Aura)
+                        end
+                    end
+                end
+            end
+        end)
+    end
+
+    -- Function to enable One Punch (sets health to 0 on punch)
+    function enableOnePunch()
+        local player = game.Players.LocalPlayer
+        local character = player.Character
+        local humanoid = character:FindFirstChild("Humanoid")
+        
+        -- Enable touch to instantly kill other players when colliding
+        game:GetService("RunService").Heartbeat:Connect(function()
+            if _G.onePunch and character and humanoid then
+                for _, otherPlayer in pairs(game.Players:GetChildren()) do
+                    if otherPlayer ~= player and otherPlayer.Character then
+                        local otherCharacter = otherPlayer.Character
+                        local otherHumanoid = otherCharacter:FindFirstChild("Humanoid")
+                        
+                        -- If another player is nearby, set health to 0 (One Punch)
+                        if otherHumanoid and (otherCharacter.PrimaryPart.Position - character.PrimaryPart.Position).Magnitude < 5 then
+                            otherHumanoid.Health = 0  -- Set health to 0 on punch collision
+                        end
+                    end
+                end
+            end
+        end)
+    end
+
+    -- Function to duplicate money (add the specified amount to the player's wallet)
+    function duplicateMoney(amount)
+        local player = game.Players.LocalPlayer
+        local maxAmount = 200000  -- Maximum money that can be duplicated
+        local currentMoney = player.leaderstats and player.leaderstats.Money
+        if currentMoney then
+            local newAmount = currentMoney.Value + amount
+            if newAmount > maxAmount then
+                newAmount = maxAmount
+            end
+            currentMoney.Value = newAmount
+            print("Duplicated money: " .. amount .. " Total: " .. currentMoney.Value)
+        else
+            warn("Player does not have a 'Money' leaderstat!")
+        end
+    end
+
+    -- Function to duplicate a gun based on player input
+    function duplicateGun(gunName)
+        local player = game.Players.LocalPlayer
+        local replicatedStorage = game:GetService("ReplicatedStorage")
+        local gun = replicatedStorage:FindFirstChild(gunName)
+        
+        if gun then
+            -- Clone the gun and place it in the player's Backpack
+            local gunClone = gun:Clone()
+            gunClone.Parent = player.Backpack
+            print("Gun duplicated:", gunName)
+        else
+            warn("Gun not found in ReplicatedStorage: " .. gunName)
+        end
+    end
+
+    -- Function for Auto Pickup (Automatically picks up items within range)
+    function enableAutoPickup()
+        local player = game.Players.LocalPlayer
+        local character = player.Character
+        if not character then return end
+
+        game:GetService("RunService").Heartbeat:Connect(function()
+            if _G.autoPickup and character then
+                for _, item in pairs(workspace:GetChildren()) do
+                    if item:IsA("Part") and (item.Position - character.PrimaryPart.Position).Magnitude < 50000000 then
+                        -- Simulate a touch with the item to pick it up
+                        firetouchinterest(character.HumanoidRootPart, item, 0)
+                        firetouchinterest(character.HumanoidRootPart, item, 1)
+                    end
+                end
+            end
+        end)
+    end
+
+    -- Function to enable Wall Hack (shows red outline around players)
+    function enableWallHack()
+        local player = game.Players.LocalPlayer
+        local character = player.Character
+        if not character then return end
+        
+        for _, otherPlayer in pairs(game.Players:GetChildren()) do
+            if otherPlayer.Character and otherPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                -- Outline setup (Red color)
+                local outline = Instance.new("SelectionBox")
+                outline.Adornee = otherPlayer.Character.HumanoidRootPart
+                outline.Color3 = Color3.fromRGB(255, 0, 0)
+                outline.Parent = otherPlayer.Character
+            end
+        end
+    end
+
+    -- Create Tabs
+    local trollingTab = Window:MakeTab({
+        Name = "Trolling",
+        Icon = "rbxassetid://4483345998",
+        PremiumOnly = false
+    })
+    
+    local dupingTab = Window:MakeTab({
+        Name = "Duping",
+        Icon = "rbxassetid://4483345998",
+        PremiumOnly = false
+    })
+    
+    local usefulTab = Window:MakeTab({
+        Name = "Useful",
+        Icon = "rbxassetid://4483345998",
+        PremiumOnly = false
+    })
+
+    -- Add buttons to the "Trolling" tab
+    trollingTab:AddButton({
+        Name = "Enable One Punch",
+        Callback = function()
+            _G.onePunch = true
+            enableOnePunch()
+        end
+    })
+
+    trollingTab:AddButton({
+        Name = "Enable Kill Aura",
+        Callback = function()
+            _G.killAura = true
+            enableKillAura()
+        end
+    })
+
+    -- Add buttons to the "Duping" tab
+    dupingTab:AddTextbox({
+        Name = "Enter Gun Name",
+        Default = "Enter gun name here",
+        TextDisappear = true,
+        Callback = function(gunName)
+            duplicateGun(gunName)
+        end
+    })
+
+    dupingTab:AddTextbox({
+        Name = "Enter Money Amount",
+        Default = "Enter money amount",
+        TextDisappear = true,
+        Callback = function(amountText)
+            local amount = tonumber(amountText)
+            if amount and amount > 0 then
+                duplicateMoney(amount)
+            else
+                warn("Invalid money amount entered!")
+            end
+        end
+    })
+
+    -- Add buttons to the "Useful" tab
+    usefulTab:AddButton({
+        Name = "Enable Godmode (4 Million Health)",
+        Callback = function()
+            _G.godmode = true
+            enableGodmode()
+        end
+    })
+    
+    usefulTab:AddButton({
+        Name = "Enable Wall Hack (Red Outline)",
+        Callback = function()
+            _G.wallHack = true
+            enableWallHack()
+        end
+    })
+    
+    -- Create Auto Pickup Tab
+    local autoPickupTab = Window:MakeTab({
+        Name = "Auto Pickup",
+        Icon = "rbxassetid://4483345998",
+        PremiumOnly = false
+    })
+    
+    autoPickupTab:AddButton({
+        Name = "Enable Auto Pickup",
+        Callback = function()
+            _G.autoPickup = true
+            enableAutoPickup()
+        end
+    })
+
+    -- Initialize OrionLib UI
+    OrionLib:Init()
+end
